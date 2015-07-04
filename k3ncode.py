@@ -2,7 +2,7 @@
 
 import random,re,sys
 import base64, string
-import M2Crypto, hashlib, m2secret,argparse
+import hashlib,argparse
 
 
 class InvalidInput(Exception):
@@ -305,45 +305,6 @@ class k3encrypt:
 		self.input="".join(output)
 				
 					
-			
-
-	def m2crypto(self,alg,key,rev=0,iv=None):
-		if iv is None:
-			iv = '\0' * 16
-		else:
-			iv = base64.b64decode(iv)
-		rev=1-rev
-		c=M2Crypto.EVP.Cipher(alg, key=key, iv=iv, op=rev)
-		o=c.update(self.input)
-		o=o+c.final()
-		del c
-		self.input=o
-
-	def m2mzsecret(self,alg,key,rev=0):
-		c=m2secret.Secret('\0'*32,'\0'*32,None,1000,alg)
-		if rev==0:
-			c.encrypt(self.input,key)
-			self.input=c.serialize().split('|')[2]
-			self.input=m2secret.unhexlify(self.input)
-		else:
-			bases='0000000000000000000000000000000000000000000000000000000000000000|0000000000000000000000000000000000000000000000000000000000000000'
-			b="%s|%s"%(bases,m2secret.hexlify(self.input))
-			c.deserialize(b)
-			self.input=c.decrypt(key)
-
-
-	def aes256(self,key,rev=0,iv=None):
-		self.m2mzsecret('aes_256_cbc',key,rev)
-
-		
-	def des(self,key,rev=0,iv=None):
-		self.m2mzsecret('des_ede_cbc',key,rev)
-
-	def des3des(self,key,rev=0,iv=None):
-		self.m2mzsecret('des_ede3_cbc',key,rev)
-
-		
-		
 
 	def keyedceaser(self,key,rev=0):
 		key=key.lower()
@@ -408,7 +369,7 @@ class k3encrypt:
 		
 if (__name__ == "__main__"):
 	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse')
-	encrypts=('ceaser','keyceaser','aes256','vigenere','playfair','des','3des')
+	encrypts=('ceaser','keyceaser','vigenere','playfair')
 	ap=argparse.ArgumentParser(description='An encoding/encryption tool',usage="Usage: %s [-k key] [-e cipher] [-d cipher] [ -i encode ] [ -o encode ] [-h] "%(sys.argv[0]),)
 	ap.add_argument('-k','--key',type=str,help="encryption key")
 	ap.add_argument('-e','--encrypt',type=str,help="Cipher used to encrypt: %s"%encrypts.__str__())
@@ -422,7 +383,10 @@ if (__name__ == "__main__"):
 	output=k3encrypt(inc)
 	cont=1
 	try:
-		if args.decode != 'None' and args.decode != "ascii":
+		if args.decode != None and args.decode != "ascii":
+			if not args.decode in encodes:
+				output="Invalid decode: %s"%args.decode
+				cont=0
 			if args.decode == "hex":
 				output.fromanytostr(16)
 			if args.decode == "binary":
@@ -463,21 +427,18 @@ if (__name__ == "__main__"):
 			cont=0
 	if cont==1:
 		try:
-			if args.encrypt != None and args.encrypt != "none":
-				if args.encrypt == "ceaser":
+			if encrypt != None and encrypt != "none":
+				if not encrypt in encrypts:
+					output="Invalid encrypt/decrypt: %s"%encrypt
+					cont=0
+				if encrypt == "ceaser":
 					output.ceaser(int(key),encmode)
-				if args.encrypt == "keyceaser":
+				if encrypt == "keyceaser":
 					output.keyedceaser(key,encmode)
-				if args.encrypt == "aes256":
-					output.aes256(key,encmode)
-				if args.encrypt == "vigenere":
+				if encrypt == "vigenere":
 					output.vigenere(key,encmode)
-				if args.encrypt == "playfair":
+				if encrypt == "playfair":
 					output.playfair(key,encmode,ijblock)
-				if args.encrypt == "des":
-					output.des(key,encmode)
-				if args.encrypt == "3des":
-					output.des3des(key,encmode)
 		except:
 			output="Encryption Error"
 			cont=0
@@ -485,6 +446,9 @@ if (__name__ == "__main__"):
 	if cont==1:
 		try:
 			if args.encode != None and args.encode != "ascii":
+				if not args.encode in encodes:
+					output="Invalid encode: %s"%args.encode
+					cont=0
 				if args.encode == "hex":
 					output.toanyfromstr(16)
 				if args.encode == "binary":
