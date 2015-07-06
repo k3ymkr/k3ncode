@@ -406,6 +406,7 @@ if (__name__ == "__main__"):
 	except: 
 		output="Decoding Error"
 		cont=0
+	encrypt=None
 	if args.encrypt:
 		if args.key:
 			key=args.key
@@ -426,7 +427,7 @@ if (__name__ == "__main__"):
 			output="Decryption request with no key"
 			cont=0
 	if cont==1:
-		try:
+		#try:
 			if encrypt != None and encrypt != "none":
 				if not encrypt in encrypts:
 					output="Invalid encrypt/decrypt: %s"%encrypt
@@ -439,9 +440,9 @@ if (__name__ == "__main__"):
 					output.vigenere(key,encmode)
 				if encrypt == "playfair":
 					output.playfair(key,encmode,ijblock)
-		except:
-			output="Encryption Error"
-			cont=0
+		#except:
+		#	output="Encryption Error"
+		#	cont=0
 
 	if cont==1:
 		try:
