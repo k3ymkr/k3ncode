@@ -53,6 +53,7 @@ class k3encrypt:
 		self.input=new
 
 
+
 	def ceaser(self,chars=13,rev=0):
 		out=""
 		for a in self.input:
@@ -340,6 +341,19 @@ class k3encrypt:
 						num=b+fkey[num-b-1]-96
 			out+=chr(num)
 		self.input=out
+
+
+	def atbash(self):
+		ret=""
+		for a in self.input:
+			b=ord(a)
+			if b>96 and b <123:
+				ret+=chr(96+(123-b))
+			elif b>64 and b <91:
+				ret+=chr(64+(91-b))
+			else:
+				ret+=a
+		self.input=ret
 			
 	def lower(self):
 		self.input=self.input.lower()
@@ -347,14 +361,6 @@ class k3encrypt:
 	def upper(self):
 		self.input=self.input.upper()
 
-	def urlreplace(self,into):
-		out=""
-		for a in into.group():
-			if a != '%':
-				out+=a
-		return chr(self.fromany(out,16))
-
-				
 	def urlencode(self,rev=0):
 		out=""
 		if rev==0:
@@ -379,7 +385,7 @@ class k3encrypt:
 		
 		
 if (__name__ == "__main__"):
-	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse','flip','lower','upper')
+	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse','flip','lower','upper','atbash','rot13')
 	encrypts=('ceaser','keyceaser','vigenere','playfair')
 	ap=argparse.ArgumentParser(description='An encoding/encryption tool',usage="Usage: %s [-k key] [-e cipher] [-d cipher] [ -i encode ] [ -o encode ] [-h] "%(sys.argv[0]),)
 	ap.add_argument('-k','--key',type=str,help="encryption key")
@@ -421,6 +427,10 @@ if (__name__ == "__main__"):
 			output.upper()
 		if args.decode == "lower":
 			output.lower()
+		if args.decode == "atbash":
+			output.atbash()
+		if args.decode == "rot13":
+			output.ceaser(13)
 #	except: 
 #		output="Decoding Error"
 #		cont=0
@@ -490,6 +500,10 @@ if (__name__ == "__main__"):
 					output.upper()
 				if args.encode == "lower":
 					output.lower()
+				if args.encode == "atbash":
+					output.atbash()
+				if args.encode == "rot13":
+					output.ceaser(13)
 		except:
 			output="Encoding Error"
 
