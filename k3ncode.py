@@ -45,7 +45,13 @@ class k3encrypt:
 			self.input=base64.b32decode(self.input)
 		else:
 			self.input=base64.b64decode(self.input)
-		
+	
+	def flip(self):
+		new=""
+		for a in self.input:
+			new="%s%s"%(a,new)
+		self.input=new
+
 
 	def ceaser(self,chars=13,rev=0):
 		out=""
@@ -335,6 +341,11 @@ class k3encrypt:
 			out+=chr(num)
 		self.input=out
 			
+	def lower(self):
+		self.input=self.input.lower()
+	
+	def upper(self):
+		self.input=self.input.upper()
 
 	def urlreplace(self,into):
 		out=""
@@ -368,7 +379,7 @@ class k3encrypt:
 		
 		
 if (__name__ == "__main__"):
-	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse')
+	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse','flip','lower','upper')
 	encrypts=('ceaser','keyceaser','vigenere','playfair')
 	ap=argparse.ArgumentParser(description='An encoding/encryption tool',usage="Usage: %s [-k key] [-e cipher] [-d cipher] [ -i encode ] [ -o encode ] [-h] "%(sys.argv[0]),)
 	ap.add_argument('-k','--key',type=str,help="encryption key")
@@ -380,32 +391,39 @@ if (__name__ == "__main__"):
 	inc=""
 	for a in sys.stdin.readlines():
 		inc+=a
+	inc=inc.rstrip()
 	output=k3encrypt(inc)
 	cont=1
-	try:
-		if args.decode != None and args.decode != "ascii":
-			if not args.decode in encodes:
-				output="Invalid decode: %s"%args.decode
-				cont=0
-			if args.decode == "hex":
-				output.fromanytostr(16)
-			if args.decode == "binary":
-				output.fromanytostr(2)
-			if args.decode == "binary7":
-				output.frombin7tostr()
-			if args.decode == "oct":
-				output.fromanytostr(8)
-			if args.decode == "base64":
-				output.frombase64()
-			if args.decode == "base32":
-				output.frombase64(32)
-			if args.decode == "urlencode":
-				output.urlencode(1)
-			if args.decode == "morse":
-				output.morse(1)
-	except: 
-		output="Decoding Error"
-		cont=0
+#	try:
+	if args.decode != None and args.decode != "ascii":
+		if not args.decode in encodes:
+			output="Invalid decode: %s"%args.decode
+			cont=0
+		if args.decode == "hex":
+			output.fromanytostr(16)
+		if args.decode == "binary":
+			output.fromanytostr(2)
+		if args.decode == "binary7":
+			output.frombin7tostr()
+		if args.decode == "oct":
+			output.fromanytostr(8)
+		if args.decode == "base64":
+			output.frombase64()
+		if args.decode == "base32":
+			output.frombase64(32)
+		if args.decode == "urlencode":
+			output.urlencode(1)
+		if args.decode == "morse":
+			output.morse(1)
+		if args.decode == "flip":
+			output.flip()
+		if args.decode == "upper":
+			output.upper()
+		if args.decode == "lower":
+			output.lower()
+#	except: 
+#		output="Decoding Error"
+#		cont=0
 	encrypt=None
 	if args.encrypt:
 		if args.key:
@@ -466,6 +484,12 @@ if (__name__ == "__main__"):
 					output.urlencode()
 				if args.encode == "morse":
 					output.morse()
+				if args.encode == "flip":
+					output.flip()
+				if args.encode == "upper":
+					output.upper()
+				if args.encode == "lower":
+					output.lower()
 		except:
 			output="Encoding Error"
 
