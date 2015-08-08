@@ -26,6 +26,17 @@ class k3encrypt:
 		for a in self.input:
 			out+=self.toany(str(ord(a)),base)
 		self.input=out
+
+	def tohex(self):
+		toanyfromstr(16)
+
+	def tooct(self):
+		toanyfromstr(8)
+
+	def tobin(self):
+		toanyfromstr(2)
+
+
 	
 	def tobin7fromstr(self):
 		out=""
@@ -45,6 +56,9 @@ class k3encrypt:
 			self.input=base64.b32decode(self.input)
 		else:
 			self.input=base64.b64decode(self.input)
+
+	def frombase32(self):
+		self.frombase64(32)
 	
 	def flip(self):
 		new=""
@@ -53,9 +67,55 @@ class k3encrypt:
 		self.input=new
 
 
+	def uuencode(self):
+		out="begin 000 -\n"
+		i=self.input
+		c=0
+		s=32
+		l=""
+		isize=len(i)
+		while(c<isize):
+			t=""
+			for a in range(c,c+3):
+				if a<isize:
+					 t+=self.toany(str(ord(i[a])),2)
+					 s+=1
+			c+=3
+			for a in range(0,4):
+				l+=chr(32+self.fromany(t[a*6:a*6+6],2))
+			if (c%45==0):
+				out+="%s%s\n"%(chr(s),l)
+				l=""
+				s=32
+		out+="%s%s\n"%(chr(s),l)
+		out+="`\nend\n"
+		self.input=out
+			
+	def uudecode(self):
+		i=re.sub('^begin .*?\n','',self.input)	
+		out=""
+		m=re.match('^(.*?)\n',i)
+		while(m.group(1)!="end"):
+			l=""
+			v=m.group(1)
+			i=re.sub('^.*?\n','',i)
+			v=v[1:]
+			isize=len(v)
+			c=0
+			while(c<isize):
+				t=""
+				for a in range(c,c+4):
+					if a<isize:
+						t+=self.toany(str(ord(v[a])-32),2)[2:]
+				c+=4
+				for a in range(0,3):
+					out+=chr(self.fromany(t[a*8:a*8+8],2))
+			m=re.match('^(.*?)\n',i)
+		self.input=out
 
 	def ceaser(self,chars=13,rev=0):
 		out=""
+		chars=int(chars)
 		for a in self.input:
 			num=ord(a)
 			for b in (64,96):
@@ -71,6 +131,7 @@ class k3encrypt:
 			out+=chr(num)
 			
 		self.input=out
+
 
 
 	def fromanytostr(self,base):
@@ -108,11 +169,33 @@ class k3encrypt:
 				raise k3encrypt.InvalidInput()
 			out+=chr(count)
 		self.input=out
+
+	def fromhex(self):
+		self.fromanytostr(16)
 				
+	def frombin(self):
+		self.fromanytostr(2)
+				
+	def fromoct(self):
+		self.fromanytostr(8)
+				
+	def hash(self,alg):
+		t=hashlib.new(alg)
+		t.update(self.input)
+		self.input=t.hexdigest()
+		self.input+="\n"
+
+	def md5(self):
+		self.hash("md5")
+	def sha1(self):
+		self.hash("sha1")
+	def sha256(self):
+		self.hash("sha256")
+	def sha512(self):
+		self.hash("sha512")
+		
 		
 			
-
-
 	def frombin7tostr(self):
 		binary=""
 		out=""
@@ -172,6 +255,12 @@ class k3encrypt:
 				except:
 					out+=a
 		self.input=out
+
+	def frommorse(self):
+		self.morse(1)
+				
+	def tomorse(self):
+		self.morse()
 				
 			
 			
@@ -230,6 +319,19 @@ class k3encrypt:
 						keypos=0
 			out+=chr(num)
 		self.input=out
+
+	def xor(self,key,rev=0):
+		#Rev is pointless, but I kept it available for compatability
+
+		out=""
+		keyloop=0
+		for a in self.input:
+			out+=chr(ord(a)^ord(key[keyloop]))
+			keyloop+=1
+			if keyloop == len(key):
+				keyloop=0
+		self.input=out
+		
 
 
 	def playfair(self,keyBase,rev=0,ijblock=1):
@@ -361,6 +463,14 @@ class k3encrypt:
 	def upper(self):
 		self.input=self.input.upper()
 
+
+	def urlreplace(self,into):
+		out=""
+		for a in into.group():
+			if a != '%':
+				out+=a
+		return chr(self.fromany(out,16))
+
 	def urlencode(self,rev=0):
 		out=""
 		if rev==0:
@@ -376,6 +486,12 @@ class k3encrypt:
 			self.input=out
 
 			
+	def fromurlencode(self):
+		self.urlencode(1)
+	
+	def tourlencode(self):
+		self.urlencode()
+
 
 		
 	
@@ -385,55 +501,32 @@ class k3encrypt:
 		
 		
 if (__name__ == "__main__"):
+	
+	#Add xor, shaX, md5 and uuencoding
 	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse','flip','lower','upper','atbash','rot13')
-	encrypts=('ceaser','keyceaser','vigenere','playfair')
+	encodesin={"ascii":"None","hex": 'fromhex',"binary": "frombin","oct": "fromoct","binary7": "frombin7tostr","base64": "frombase64","base32": "frombase32","urlencode":"fromurlencode","morse": "frommorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","uudecode":"uudecode"}
+	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7tostr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode"}
+	encrypts={'ceaser':'ceaser','keyceaser':'keyceaser','vigenere':'vigenere','playfair':'playfair','xor':'xor'}
 	ap=argparse.ArgumentParser(description='An encoding/encryption tool',usage="Usage: %s [-k key] [-e cipher] [-d cipher] [ -i encode ] [ -o encode ] [-h] "%(sys.argv[0]),)
 	ap.add_argument('-k','--key',type=str,help="encryption key")
-	ap.add_argument('-e','--encrypt',type=str,help="Cipher used to encrypt: %s"%encrypts.__str__())
-	ap.add_argument('-d','--decrypt',type=str,help="Cipher used to decrypt: %s"%encrypts.__str__())
-	ap.add_argument('-i','--decode',type=str,help="Encoding technic on input: %s"%encodes.__str__())
-	ap.add_argument('-o','--encode',type=str,help="Encoding technic on output: %s"%encodes.__str__())
+	ap.add_argument('-e','--encrypt',type=str,help="Cipher used to encrypt: %s"%encrypts.keys().__str__())
+	ap.add_argument('-d','--decrypt',type=str,help="Cipher used to decrypt: %s"%encrypts.keys().__str__())
+	ap.add_argument('-i','--decode',type=str,help="Encoding technic on input: %s"%encodesin.keys().__str__())
+	ap.add_argument('-o','--encode',type=str,help="Encoding technic on output: %s"%encodesout.keys().__str__())
 	args=ap.parse_args()
 	inc=""
 	for a in sys.stdin.readlines():
 		inc+=a
-	inc=inc.rstrip()
+	#inc=inc.rstrip()
 	output=k3encrypt(inc)
 	cont=1
-#	try:
 	if args.decode != None and args.decode != "ascii":
-		if not args.decode in encodes:
+		if encodesin.has_key(args.decode):
+			res=getattr(output,encodesin[args.decode])
+			res()
+		else:
 			output="Invalid decode: %s"%args.decode
 			cont=0
-		if args.decode == "hex":
-			output.fromanytostr(16)
-		if args.decode == "binary":
-			output.fromanytostr(2)
-		if args.decode == "binary7":
-			output.frombin7tostr()
-		if args.decode == "oct":
-			output.fromanytostr(8)
-		if args.decode == "base64":
-			output.frombase64()
-		if args.decode == "base32":
-			output.frombase64(32)
-		if args.decode == "urlencode":
-			output.urlencode(1)
-		if args.decode == "morse":
-			output.morse(1)
-		if args.decode == "flip":
-			output.flip()
-		if args.decode == "upper":
-			output.upper()
-		if args.decode == "lower":
-			output.lower()
-		if args.decode == "atbash":
-			output.atbash()
-		if args.decode == "rot13":
-			output.ceaser(13)
-#	except: 
-#		output="Decoding Error"
-#		cont=0
 	encrypt=None
 	if args.encrypt:
 		if args.key:
@@ -441,7 +534,7 @@ if (__name__ == "__main__"):
 			encrypt=args.encrypt
 			encmode=0
 			if args.decrypt:
-				output="Can't encrypt and decrypt in the same pass"
+				print >>sys.stderr,"Can't encrypt and decrypt in the same pass"
 				cont=0
 		else:
 			output="Encryption request with no key"
@@ -452,59 +545,25 @@ if (__name__ == "__main__"):
 			encrypt=args.decrypt
 			encmode=1
 		else:
-			output="Decryption request with no key"
+			print >>sys.stderr,"Decryption request with no key"
 			cont=0
 	if cont==1:
-		#try:
-			if encrypt != None and encrypt != "none":
-				if not encrypt in encrypts:
-					output="Invalid encrypt/decrypt: %s"%encrypt
-					cont=0
-				if encrypt == "ceaser":
-					output.ceaser(int(key),encmode)
-				if encrypt == "keyceaser":
-					output.keyedceaser(key,encmode)
-				if encrypt == "vigenere":
-					output.vigenere(key,encmode)
-				if encrypt == "playfair":
-					output.playfair(key,encmode,ijblock)
-		#except:
-		#	output="Encryption Error"
-		#	cont=0
+		if encrypt != None and encrypt != "none":
+			if encrypts.has_key(encrypt):
+				res=getattr(output,encrypts[encrypt])
+				res(key,encmode)
+			else:
+				output="Invalid encrypt/decrypt: %s"%encrypt
+				cont=0
+				
+	if cont==1:
+		if args.encode != None and args.encode != "ascii":
+			if encodesout.has_key(args.encode):
+				res=getattr(output,encodesout[args.encode])
+				res()
+			else:
+				print >>sys.stderr,"Invalid decode: %s"%args.encode
+				cont=0
 
 	if cont==1:
-		try:
-			if args.encode != None and args.encode != "ascii":
-				if not args.encode in encodes:
-					output="Invalid encode: %s"%args.encode
-					cont=0
-				if args.encode == "hex":
-					output.toanyfromstr(16)
-				if args.encode == "binary":
-					output.toanyfromstr(2)
-				if args.encode == "binary7":
-					output.tobin7fromstr()
-				if args.encode == "oct":
-					output.toanyfromstr(8)
-				if args.encode == "base64":
-					output.tobase64()
-				if args.encode == "base32":
-					output.tobase64(32)
-				if args.encode == "urlencode":
-					output.urlencode()
-				if args.encode == "morse":
-					output.morse()
-				if args.encode == "flip":
-					output.flip()
-				if args.encode == "upper":
-					output.upper()
-				if args.encode == "lower":
-					output.lower()
-				if args.encode == "atbash":
-					output.atbash()
-				if args.encode == "rot13":
-					output.ceaser(13)
-		except:
-			output="Encoding Error"
-
-	print output
+		sys.stdout.write(output.__str__())
