@@ -87,8 +87,10 @@ class k3encrypt:
 				out+="%s%s\n"%(chr(s),l)
 				l=""
 				s=32
-		out+="%s%s\n"%(chr(s),l)
-		out+="`\nend\n"
+		if l!="":
+			out+="%s%s\n"%(chr(s),l)
+		out+='`'
+		out+="\nend\n"
 		self.input=out
 			
 	def uudecode(self):
