@@ -10,6 +10,10 @@ class InvalidInput(Exception):
 	
 
 class k3encrypt:
+	encodesin={"ascii":"None","hex": 'fromhex',"binary": "frombin","oct": "fromoct","binary7": "frombin7tostr","base64": "frombase64","base32": "frombase32","urlencode":"fromurlencode","morse": "frommorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","uudecode":"uudecode","htmlentities":"fromhtmlentities"}
+	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7tostr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode","htmlentities":"tohtmlentities"}
+	encrypts={'ceaser':'ceaser','keyceaser':'keyceaser','vigenere':'vigenere','playfair':'playfair','xor':'xor'}
+
 	input=""
 
 	def __init__(self,input):
@@ -50,6 +54,7 @@ class k3encrypt:
 			self.input=base64.b32encode(self.input)
 		else:
 			self.input=base64.b64encode(self.input)
+		self.input+="\n"
 	
 	def frombase64(self,size=64):
 		if (size==32):
@@ -67,6 +72,50 @@ class k3encrypt:
 		self.input=new
 
 
+	def tohtmlentities(self):
+		map={'"':'&quot;','&':'&amp;',"'":'&apos;','<':'&lt;','>':'&gt;',' ':'&nbsp;'}
+		ret=""
+		for a in self.input:
+			if (map.has_key(a)):
+				ret+=map[a]
+			else:
+				b=ord(a)
+				ret+='&#%d;'%b
+		self.input=ret
+
+	def fromhtmlentities(self):
+		map={'&nbsp;':' ', '&quot;':'"', '&apos;':"'", '&amp;':'&', '&lt;':'<', '&gt;':'>'}
+		s=self.input
+		ret=""
+		while len(s)>0:
+			m=re.match('(&.*?;)',s,flags=re.I|re.S)
+			if m:
+				n=m.group(1)
+				if map.has_key(n):
+					ret+=map[n]
+				else:
+					m=re.match('&#(.*?);',s,flags=re.I|re.S)
+					if m:
+						n=m.group(1)
+						if n[0]=='x':
+							ret+=chr(self.fromany(n[1:],16))
+						elif n.isdigit():
+							ret+=chr(int(n))
+						else:
+							ret+=n
+				c=re.compile('^&.*?;',flags=re.I|re.S)
+				s=re.sub(c,'',s)
+			else:
+				ret+=s[0]
+				if len(s)>0:
+					s=s[1:]
+				else:
+					s=""
+		self.input=ret
+		
+				
+			
+	
 	def uuencode(self):
 		out="begin 000 -\n"
 		i=self.input
@@ -505,16 +554,12 @@ class k3encrypt:
 if (__name__ == "__main__"):
 	
 	#Add xor, shaX, md5 and uuencoding
-	encodes=('ascii','hex','binary','binary7','oct','base64','base32','urlencode','morse','flip','lower','upper','atbash','rot13')
-	encodesin={"ascii":"None","hex": 'fromhex',"binary": "frombin","oct": "fromoct","binary7": "frombin7tostr","base64": "frombase64","base32": "frombase32","urlencode":"fromurlencode","morse": "frommorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","uudecode":"uudecode"}
-	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7tostr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode"}
-	encrypts={'ceaser':'ceaser','keyceaser':'keyceaser','vigenere':'vigenere','playfair':'playfair','xor':'xor'}
 	ap=argparse.ArgumentParser(description='An encoding/encryption tool',usage="Usage: %s [-k key] [-e cipher] [-d cipher] [ -i encode ] [ -o encode ] [-h] "%(sys.argv[0]),)
 	ap.add_argument('-k','--key',type=str,help="encryption key")
-	ap.add_argument('-e','--encrypt',type=str,help="Cipher used to encrypt: %s"%encrypts.keys().__str__())
-	ap.add_argument('-d','--decrypt',type=str,help="Cipher used to decrypt: %s"%encrypts.keys().__str__())
-	ap.add_argument('-i','--decode',type=str,help="Encoding technic on input: %s"%encodesin.keys().__str__())
-	ap.add_argument('-o','--encode',type=str,help="Encoding technic on output: %s"%encodesout.keys().__str__())
+	ap.add_argument('-e','--encrypt',type=str,help="Cipher used to encrypt: %s"%k3encrypt.encrypts.keys().__str__())
+	ap.add_argument('-d','--decrypt',type=str,help="Cipher used to decrypt: %s"%k3encrypt.encrypts.keys().__str__())
+	ap.add_argument('-i','--decode',type=str,help="Encoding technic on input: %s"%k3encrypt.encodesin.keys().__str__())
+	ap.add_argument('-o','--encode',type=str,help="Encoding technic on output: %s"%k3encrypt.encodesout.keys().__str__())
 	args=ap.parse_args()
 	inc=""
 	for a in sys.stdin.readlines():
@@ -523,8 +568,8 @@ if (__name__ == "__main__"):
 	output=k3encrypt(inc)
 	cont=1
 	if args.decode != None and args.decode != "ascii":
-		if encodesin.has_key(args.decode):
-			res=getattr(output,encodesin[args.decode])
+		if k3encrypt.encodesin.has_key(args.decode):
+			res=getattr(output,k3encrypt.encodesin[args.decode])
 			res()
 		else:
 			output="Invalid decode: %s"%args.decode
@@ -551,8 +596,8 @@ if (__name__ == "__main__"):
 			cont=0
 	if cont==1:
 		if encrypt != None and encrypt != "none":
-			if encrypts.has_key(encrypt):
-				res=getattr(output,encrypts[encrypt])
+			if k3encrypt.encrypts.has_key(encrypt):
+				res=getattr(output,k3encrypt.encrypts[encrypt])
 				res(key,encmode)
 			else:
 				output="Invalid encrypt/decrypt: %s"%encrypt
@@ -560,8 +605,8 @@ if (__name__ == "__main__"):
 				
 	if cont==1:
 		if args.encode != None and args.encode != "ascii":
-			if encodesout.has_key(args.encode):
-				res=getattr(output,encodesout[args.encode])
+			if k3encrypt.encodesout.has_key(args.encode):
+				res=getattr(output,k3encrypt.encodesout[args.encode])
 				res()
 			else:
 				print >>sys.stderr,"Invalid decode: %s"%args.encode
