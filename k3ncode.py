@@ -11,7 +11,7 @@ class InvalidInput(Exception):
 
 class k3encrypt:
 	encodesin={"ascii":"None","hex": 'fromhex',"binary": "frombin","oct": "fromoct","binary7": "frombin7tostr","base64": "frombase64","base32": "frombase32","urlencode":"fromurlencode","morse": "frommorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","uudecode":"uudecode","htmlentities":"fromhtmlentities"}
-	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7tostr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode","htmlentities":"tohtmlentities"}
+	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7fromstr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode","htmlentities":"tohtmlentities"}
 	encrypts={'ceaser':'ceaser','keyceaser':'keyceaser','vigenere':'vigenere','playfair':'playfair','xor':'xor'}
 
 	input=""
@@ -32,13 +32,13 @@ class k3encrypt:
 		self.input=out
 
 	def tohex(self):
-		toanyfromstr(16)
+		self.toanyfromstr(16)
 
 	def tooct(self):
-		toanyfromstr(8)
+		self.toanyfromstr(8)
 
 	def tobin(self):
-		toanyfromstr(2)
+		self.toanyfromstr(2)
 
 
 	
@@ -54,7 +54,6 @@ class k3encrypt:
 			self.input=base64.b32encode(self.input)
 		else:
 			self.input=base64.b64encode(self.input)
-		self.input+="\n"
 	
 	def frombase64(self,size=64):
 		if (size==32):
@@ -564,7 +563,7 @@ if (__name__ == "__main__"):
 	inc=""
 	for a in sys.stdin.readlines():
 		inc+=a
-	#inc=inc.rstrip()
+	inc=inc.rstrip()
 	output=k3encrypt(inc)
 	cont=1
 	if args.decode != None and args.decode != "ascii":
@@ -613,4 +612,5 @@ if (__name__ == "__main__"):
 				cont=0
 
 	if cont==1:
-		sys.stdout.write(output.__str__())
+		#sys.stdout.write(output.__str__())
+		print output
