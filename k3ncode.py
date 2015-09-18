@@ -72,26 +72,27 @@ class k3encrypt:
 
 
 	def tohtmlentities(self):
-		map={'"':'&quot;','&':'&amp;',"'":'&apos;','<':'&lt;','>':'&gt;',' ':'&nbsp;'}
+		cmap={'"':'&quot;','&':'&amp;',"'":'&apos;','<':'&lt;','>':'&gt;',' ':'&nbsp;'}
 		ret=""
 		for a in self.input:
-			if (map.has_key(a)):
-				ret+=map[a]
+			if (cmap.has_key(a)):
+				ret+=cmap[a]
 			else:
+				print "Couldn't find %s"%a
 				b=ord(a)
 				ret+='&#%d;'%b
 		self.input=ret
 
 	def fromhtmlentities(self):
-		map={'&nbsp;':' ', '&quot;':'"', '&apos;':"'", '&amp;':'&', '&lt;':'<', '&gt;':'>'}
+		cmap={'&nbsp;':' ', '&quot;':'"', '&apos;':"'", '&amp;':'&', '&lt;':'<', '&gt;':'>'}
 		s=self.input
 		ret=""
 		while len(s)>0:
 			m=re.match('(&.*?;)',s,flags=re.I|re.S)
 			if m:
 				n=m.group(1)
-				if map.has_key(n):
-					ret+=map[n]
+				if cmap.has_key(n):
+					ret+=cmap[n]
 				else:
 					m=re.match('&#(.*?);',s,flags=re.I|re.S)
 					if m:
