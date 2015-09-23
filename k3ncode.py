@@ -78,7 +78,6 @@ class k3encrypt:
 			if (cmap.has_key(a)):
 				ret+=cmap[a]
 			else:
-				print "Couldn't find %s"%a
 				b=ord(a)
 				ret+='&#%d;'%b
 		self.input=ret
