@@ -11,7 +11,7 @@ class InvalidInput(Exception):
 
 class k3encrypt:
 	encodesin={"ascii":"None","hex": 'fromhex',"binary": "frombin","oct": "fromoct","binary7": "frombin7tostr","base64": "frombase64","base32": "frombase32","urlencode":"fromurlencode","morse": "frommorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","uudecode":"uudecode","htmlentities":"fromhtmlentities"}
-	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7fromstr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode","htmlentities":"tohtmlentities"}
+	encodesout={"ascii":"None","hex": 'tohex',"binary": "tobin","oct": "tooct","binary7": "tobin7fromstr","base64": "tobase64","base32": "tobase32","urlencode":"tourlencode","morse": "tomorse", "flip": "flip","upper": "upper","lower": "lower","atbash":"atbash","rot13": "ceaser","md5":"md5","sha1":"sha1","sha256":"sha256","sha512":"sha512","uuencode":"uuencode","htmlentities":"tohtmlentities","pbkdf2":"pbkdf2"}
 	encrypts={'ceaser':'ceaser','keyceaser':'keyceaser','vigenere':'vigenere','playfair':'playfair','xor':'xor'}
 
 	input=""
@@ -111,6 +111,16 @@ class k3encrypt:
 				else:
 					s=""
 		self.input=ret
+		
+	def pbkdf2work(self,password,salt,rounds):
+		dk=hashlib.pbkdf2_hmac('sha256',password,salt,rounds)
+		self.input=dk
+		self.tohex()
+		
+		
+		
+	def pbkdf2(self):
+		self.pbkdf2work(self.input,'',100000)
 		
 				
 			
