@@ -215,7 +215,7 @@ class k3encrypt:
 					raise k3encrypt.InvalidInput()
 				inc+=a
 			elif(a.isalpha()):
-				if (ord(a)-64) >= base:
+				if (ord(a)-55) >= base:
 					raise k3encrypt.InvalidInput()
 				inc+=a
 
@@ -290,7 +290,7 @@ class k3encrypt:
 			if (a.isdigit()):
 				tout=int(a)
 			else:
-				tout=ord(a)-64
+				tout=ord(a)-55
 			out+=tout*size
 			size/=base
 		return out	
